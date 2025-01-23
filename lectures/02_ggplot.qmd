@@ -338,7 +338,7 @@ ggplot(starwars, aes(x=height, color=human_skincolor)) +
 
 ```{r swviolin}
 ggplot(starwars, aes(x=human_skincolor, y=height)) +
-  geom_point() +
+  geom_point() + #show outliers
   geom_violin()
 ```
 
@@ -368,14 +368,14 @@ Dataset `diamonds`: price vs. carat
 
 ```{r}
 ggplot(diamonds, aes(x=carat, y=price)) +
-  geom_point() +
-  scale_x_log10() + scale_y_log10()
+  geom_point() + #for scatterplot
+  scale_x_log10() + scale_y_log10() #échelle logarithmique, pour chaque
 ```
 
 ### 2d histogram
 
 ```{r}
-ggplot(diamonds, aes(x=carat, y=price)) +
+ggplot(diamonds, aes(x=carat, y=price)) + #diamonds is for the dataset choice
   geom_bin2d() +
   scale_x_log10() + scale_y_log10()
 ```
@@ -408,7 +408,7 @@ Finally, `scale_y_continuous` changes the 0-1 scale to %. We also set axis label
 ```{r}
 ggplot(diamonds) + 
   geom_bar(aes(x = cut, y=after_stat(prop), group=1)) +
-  scale_y_continuous(labels = scales::percent_format()) +
+  scale_y_continuous(labels = scales::percent_format()) + #make the label in %
   labs(x='Diamond cut', y='Percentage') +
   theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face="bold"))
 ```
@@ -466,10 +466,10 @@ ggsave("mtcars.pdf", plot=last_plot()) #ggsave("mtcars.png") for png format
 Or, use `print` and combine with functions like `png` or `pdf`
 
 ```{r, eval=FALSE}
-p = ggplot(mtcars, aes(mpg, wt)) + geom_point()
-png("mtcars.png")  #use pdf("mtcars.pdf") for a pdf format
+p = ggplot(mtcars, aes(mpg, wt)) + geom_point() #"save" ggplot in p, it won't be showed, just stored
+png("mtcars.png")  #use pdf("mtcars.pdf") for a pdf format  # it opens a file
 print(p)
-dev.off() #close the plotting device (saves the file)
+dev.off() #close the plotting device (saves the file) #it closes the file
 ```
 
 Base R plots can be saved similarly
@@ -512,7 +512,7 @@ Let's illustrate two cool ones
 Plot correlations for hate crime data
 
 ```{r}
-ggcorrmat(hc[,-1])
+ggcorrmat(hc[,-1]) #remove the first column of the hc (hatecrime) dataset 
 ```
 
 ## Package `ggstatsplot`
@@ -559,7 +559,7 @@ Other layers (the full list of options is [here](https://gganimate.com/reference
 
 ## Saving an animation
 
-**Important.** in Win/Mac you may need the `gifski` package
+**Important.** in Win/Mac you may need the `gifski` package #/!\
 
 `anim_save()` saves your last animated plot into a specified file and directory ("myfile.gif" and "mydirectory" below)
 
@@ -701,15 +701,24 @@ Load the Gini dataset at the course's GitHub site.
 
 ```{r}
 library(gganimate)
-#library(gifski)  #you may need this in Windows and Mac
-gini= as_tibble(read.csv("~/github/statcomp/datasets/gini.csv"))
+library(gifski)  #you may need this in Windows and Mac #if doesn't work use tools
+gini = as_tibble(read.csv("C:/Users/Pierre/OneDrive/Bureau/M1 applied eco - UPF/T2/modern statistical computing/github/statcomp/datasets/gini.csv"))
 gini
 ```
 
 1. Do a (non-animated) line plot of Gini vs time, with a different line colour per country
 
+```{r}
+ggplot(gini, aes(x=Year , y=Gini)) + geom_line(aes(colour=Entity), show.legend = TRUE)
+```
+
 2. Add `transition_reveal(Year)` to add an animation over time
 
+```{r}
+a = ggplot(gini, aes(x=Year , y=Gini)) + geom_line(aes(colour=Entity), show.legend = TRUE) + transition_reveal(Year)
+animate(a, renderer= gifski_renderer())
+#anim_save("animcountries.gif", animation = last_animation())
+```
 
 
 

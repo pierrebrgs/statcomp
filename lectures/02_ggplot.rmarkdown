@@ -1,0 +1,816 @@
+---
+title: "Modern Statistical Computing"
+subtitle: "2. ggplot"
+author: "David Rossell"
+institute: "Pompeu Fabra University"
+execute:
+  echo: true
+format:
+  revealjs:
+    theme: [default, custom.scss]
+    scrollable: true
+toc: true
+toc-depth: 1
+number-sections: false
+mouse-wheel: true
+code-overflow: scroll
+code-line-numbers: false
+code-copy: true
+cache: true
+title-slide-style: pandoc
+bibliography: references.bib
+---
+
+
+## Reproducing these lecture notes
+
+Required R packages
+
+
+```{r, eval=FALSE}
+install.packages("dplyr")
+install.packages("gapminder")
+install.packages("gganimate")
+install.packages("ggplot2")
+install.packages("ggstatsplot")
+install.packages("fivethirtyeight")
+install.packages("tidyverse")
+install.packages("devtools")
+devtools::install_github("rstudio-education/dsbox")
+```
+
+
+Once they're installed, load them.
+
+
+```{r, warning=FALSE}
+library(tidyverse)  #also loads ggplot2
+library(dplyr)
+library(dsbox)
+library(fivethirtyeight)
+library(gapminder)
+library(gganimate)
+library(ggstatsplot)
+```
+
+
+# ggplot basics
+
+------------------------------------------------------------------------
+
+A core member of the tidyverse. gg means "grammar of graphics", a standard syntax to describe elements in a graph. Basic syntax:
+
+
+```{r, eval=FALSE}
+ggplot(data= mydata) +
+  <GEOMFUNCTION>(mapping = aes(<MAPPINGS>))
+```
+
+
+-   `ggplot` creates a new (empty) plot, based on data from `mydata`
+
+-   GEOMFUNCTION: name of a function that adds elements to the plot, e.g. `geom_point` adds a scatterplot
+
+-   `aes` (aesthetics) describes how variables are mapped to visual properties, e.g. what goes into the x- and y-axis, colors, sizes...
+
+ggplot likes having all variables in a tibble or data.frame. If you create new variables, add them to your tibble
+
+Common error: the + sign cannot be at the beginning of a line
+
+
+##  {auto-animate="true"}
+
+
+```{r}
+ggplot(data = starwars) +
+  geom_point(mapping = aes(x = height, y = mass))
+```
+
+
+##  {auto-animate="true"}
+
+
+```{r}
+ggplot(data = starwars) +
+  geom_point(mapping = aes(x = height, y = mass)) +
+  geom_smooth(mapping = aes(x = height, y=mass), method='lm')
+```
+
+
+##  {auto-animate="true"}
+
+
+```{r}
+ggplot(data = starwars) +
+  geom_point(mapping = aes(x = height, y = mass)) +
+  geom_smooth(mapping = aes(x = height, y=mass), method='lm', se=FALSE) #remove standard error
+```
+
+
+
+## 
+
+`mapping` is shared, pass it to `ggplot` and all geoms will use it (by default)
+
+
+```{r}
+ggplot(data = starwars, mapping = aes(x = height, y = mass)) +
+  geom_point() +
+  geom_smooth(method='lm', se=FALSE)
+```
+
+
+## Point color and shape
+
+Set point color and shape according to `human_skincolor`
+
+
+```{r}
+mycols= c('fair','white','light','brown','dark')
+starwars$human_skincolor= ifelse(starwars$skin_color %in% mycols, 'human', 'non-human')
+
+ggplot(data = starwars, aes(x = height, y = mass)) +
+  geom_point(aes(color= human_skincolor, shape= human_skincolor)) +
+  geom_smooth(method='lm', se=FALSE)
+```
+
+
+## Facets
+
+Facets split the plot by one or more variables
+
+
+```{r}
+ggplot(data = starwars, aes(x = height, y = mass)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  facet_wrap(~ human_skincolor)
+```
+
+
+## Facets
+
+By default, all panels use the same x and y scales. Alternatively, set `scale` to `free`, `free_x` or `free_y`
+
+
+```{r}
+ggplot(data = starwars, aes(x = height, y = mass)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  facet_wrap(~ human_skincolor, scale="free_y")
+```
+
+
+
+
+## Summary
+
+
+```{r, eval=FALSE}
+ggplot(mydata, mapping=aes(<MAPPINGS>)) +
+  <GEOMFUNCTION1>(aes(<MAPPINGS>)) +
+  ...
+  <GEOMFUNCTIONn>(aes(<MAPPINGS>)) +
+  <FACETFUNCTION>() +
+  options
+```
+
+
+-   Options include `labs` and `theme` to set titles, labels, axis styles...
+
+-   There are also coordinate functions (e.g. for maps), we don't need them now
+
+Resources
+
+-   Cheat sheets: [Datacamp](https://res.cloudinary.com/dyd911kmh/image/upload/v1666806657/Marketing/Blog/ggplot2_cheat_sheet.pdf), [posit](https://posit.co/wp-content/uploads/2022/10/data-visualization-1.pdf)
+
+-   [Reference with all functions](https://ggplot2.tidyverse.org/reference)
+
+## Common geoms
+
+- `geom_line`: lines plot
+- `geom_point`: scatter-plot
+- `geom_bar`, `geom_col`: barplots
+- `geom_smooth`: regression between 2 variables
+- `geom_histogram`, `geom_density`, `geom_violin`, `geom_boxplot`: visualize univariate distribution
+- `geom_bin2d`, `geom_hex`: visualize bivariate distribution
+
+Facets: `facet_grid`, `facet_wrap`
+
+
+# Customizing the plots
+
+---
+
+## Line types
+
+
+```{r}
+ggplot(data = starwars, aes(x = height, y = mass, color=human_skincolor)) +
+  geom_point(aes(shape=human_skincolor)) +
+  geom_smooth(aes(linetype= human_skincolor), method='lm', se=TRUE)
+```
+
+
+## Customizing labels and legends
+
+`labs` sets title and labels of axis and aesthetics (e.g. `color`, `shape`, `linetype`)
+
+We need to set all aesthetic labels, else a separate legend is created for each
+
+
+```{r}
+mylab= 'Human character?'
+ggplot(data = starwars, aes(x = height, y = mass, color=human_skincolor)) +
+  geom_point(aes(shape=human_skincolor)) +
+  geom_smooth(aes(linetype= human_skincolor), method='lm', se=TRUE) +
+  labs(x='Height(cm)', y='Mass (kg)', title='Starwars characters', color=mylab, shape=mylab, linetype=mylab) +
+  theme(legend.position = c(0.1,0.7))
+```
+
+
+## Customizing labels and legends
+
+Same, but now change the default axis limits
+
+
+```{r}
+mylab= 'Human character?'
+ggplot(data = starwars, aes(x = height, y = mass, color=human_skincolor)) +
+  geom_point(aes(shape=human_skincolor)) +
+  geom_smooth(aes(linetype= human_skincolor), method='lm', se=TRUE) +
+  labs(x='Height(cm)', y='Mass (kg)', title='Starwars characters', color=mylab, shape=mylab, linetype=mylab) +
+  theme(legend.position = c(0.1,0.7)) +
+  coord_cartesian(ylim = c(0, 200))
+```
+
+
+## Non-linear trends
+
+By default `geom_smooth` shows a non-linear regression (`method="loess"`). Consider the `mpg` data, where
+
+-   `displ`: engine size
+
+-   `hwy`: highway miles per galon
+
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() +
+  geom_smooth(color='black') +
+  geom_smooth(method='lm', color='blue')
+```
+
+
+
+# Exercise
+
+---
+
+The blog FiveThirtyEight featured this [post](https://fivethirtyeight.com/features/higher-rates-of-hate-crimes-are-tied-to-income-inequality) on hate crimes around the 2016 USA elections
+
+Dataset `hate_crimes` (package `fivethirtyeight`) has this info for each state:
+
+- `avg_hatecrimes_per_100k_fbi`: pre-election number of hate crimes per 100,000 population by the FBI
+
+- `hate_crimes_per_100k_splc`: post-election crimes in 10-day period from SPLC (southern poverty law center)
+
+- education (% adults $\geq$ 25 with high school degree
+
+- % of people who voted Donald Trump
+
+- Income inequality (Gini index)
+
+Plus variables related to racial diversity, geographic heterogeneity and economic indicators (see `help(hate_crimes)`)
+
+---
+
+A simple scatterplot shows that FBI-reported hate crimes are lower in states with more Trump voters. 
+However, according to the blog Trump voters were not statistically significant, after accounting for inequality and education
+
+> two variables remained significant (...): income inequality and percent population with a high school degree
+
+To study this issue, use `ggplot` to produce:
+
+1. Scatter-plots of FBI-related crimes vs. Trump voters, vs. Gini index and vs. high-school. Add a regression line to the plot (without standard errors) and label the x- and y-axes
+
+2. Scatter-plot of FBI-related crimes vs. Trump voters, with different panels (facets) for states in each of 4 categories for the Gini index (see next slide)
+
+3. Same as 2, now with panels for 4 categories in the % of high-school education
+
+Turn in an html with your solution [here](https://drive.google.com/drive/folders/1jhh1CrXM3hqc7qTrOYeQzo2pV8Vly1NY?usp=sharing).
+Name your file firstname_lastname.html
+
+---
+
+To help you get started, load the data and create a smaller version with only the relevant variables
+
+
+```{r, warning=FALSE}
+library(fivethirtyeight)
+sel= c('state_abbrev','avg_hatecrimes_per_100k_fbi','share_vote_trump','gini_index','share_pop_hs')
+hc= hate_crimes[,sel]
+names(hc)= c('state','hatecrimes_fbi','votes_trump','gini','hs')
+```
+
+
+For fun, we obtain their pairwise correlations
+
+
+```{r, warning=FALSE}
+round(cor(hc[,-1], use='complete.obs'),3)
+```
+
+
+Finally, we discretize the Gini index and education into 4 groups
+
+
+```{r}
+hc$ginic= cut(hc$gini, breaks=c(0,0.43,0.45,0.47,1))
+levels(hc$ginic)= c('Gini <= 0.43','0.43 < Gini <= 0.45','0.45 < Gini <= 0.47','Gini > 0.47')
+
+hc$hsc= cut(hc$hs, breaks=c(0,0.83,0.86,0.9,1))
+levels(hc$hsc)= c('hs <= 0.83', '0.83 < hs <= 0.86', '0.86 < hs <= 0.9', 'hs > 0.9')
+```
+
+
+Hint: see `help(hate_crimes)` for how to create a scatterplot. Then add facets based on `ginic` and `hsc` created above 
+
+
+
+# Beyond scatter plots
+
+## Histograms
+
+::: panel-tabset
+
+### Histogram
+
+```{r}
+ggplot(starwars, aes(x=height, fill=human_skincolor)) +
+  geom_histogram(alpha=0.2, color='black')  #alpha is the color transparency
+```
+
+
+### Frequency polygram
+
+
+```{r}
+ggplot(starwars, aes(x=height, color=human_skincolor)) +
+  geom_freqpoly()  
+```
+
+
+
+### Density plot
+
+```{r}
+ggplot(starwars, aes(x=height, color=human_skincolor)) +
+  geom_density()  
+```
+
+
+:::
+
+
+## Violin plot
+
+::: panel-tabset
+
+### Violin plot
+
+
+```{r swviolin}
+ggplot(starwars, aes(x=human_skincolor, y=height)) +
+  geom_point() + #show outliers
+  geom_violin()
+```
+
+
+### Boxplot
+
+
+```{r swboxplot2}
+boxplot(height ~ human_skincolor, data=starwars, names=c('No','Yes'), xlab='Human skin color')
+```
+
+
+### Scatterplot
+
+
+```{r scatter}
+ggplot(starwars, aes(x=human_skincolor, y=height)) +
+  geom_point()
+```
+
+
+:::
+
+
+## Bivariate histograms
+
+Dataset `diamonds`: price vs. carat
+
+::: panel-tabset
+
+### scatterplot
+
+
+```{r}
+ggplot(diamonds, aes(x=carat, y=price)) +
+  geom_point() + #for scatterplot
+  scale_x_log10() + scale_y_log10() #échelle logarithmique, pour chaque
+```
+
+
+### 2d histogram
+
+
+```{r}
+ggplot(diamonds, aes(x=carat, y=price)) + #diamonds is for the dataset choice
+  geom_bin2d() +
+  scale_x_log10() + scale_y_log10()
+```
+
+
+:::
+
+
+## Barplot (counts)
+
+Count the number of diamonds with each cut quality (variable `cut`)
+
+
+```{r}
+ggplot(diamonds) + 
+  geom_bar(aes(x = cut))
+```
+
+
+## Barplot (percentage)
+
+To plot percentages we use `y=after_stat(prop)`, for some funny reason we must also set `group=1`.
+
+
+```{r}
+ggplot(diamonds) + 
+  geom_bar(aes(x = cut, y=after_stat(prop), group=1))
+```
+
+
+## Barplot (percentage)
+
+Finally, `scale_y_continuous` changes the 0-1 scale to %. We also set axis labels and increase their default size
+
+
+```{r}
+ggplot(diamonds) + 
+  geom_bar(aes(x = cut, y=after_stat(prop), group=1)) +
+  scale_y_continuous(labels = scales::percent_format()) + #make the label in %
+  labs(x='Diamond cut', y='Percentage') +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face="bold"))
+```
+
+
+## Multiple barplots
+
+`fill` aesthetic splits counts according to a specified variable (diamond clarity)
+
+
+```{r}
+ggplot(diamonds) + 
+  geom_bar(aes(x = cut, fill = clarity))
+```
+
+
+## Multiple barplots
+
+`position="dodge"` places bars beside each other
+
+
+```{r}
+ggplot(diamonds) + 
+  geom_bar(aes(x = cut, fill = clarity), position = "dodge")
+```
+
+
+
+## Lines plot
+
+Effect of vitamin C on tooth growth in guinea pigs vs dose, separately for two delivery methods (orange juice, ascorbic acid)
+
+
+```{r}
+df= data.frame(supp=rep(c("VC", "OJ"), each=3),
+               dose=rep(c("D0.5", "D1", "D2"),2),
+               len=c(6.8, 15, 33, 4.2, 10, 29.5))
+df
+```
+
+```{r}
+#| output-location: slide
+mylab= 'Delivery method'
+ggplot(data=df, aes(x=dose, y=len, group=supp, color=supp)) +
+  geom_line()+
+  geom_point() +
+  labs(x='Dose', y='Teeth length (mm)', group=mylab, color=mylab)
+```
+
+
+# Saving a ggplot
+
+---
+
+`ggsave` saves the last (by default) ggplot into the specified file and directory (option `path`). It guesses the format from the file extension
+
+
+```{r, eval=FALSE}
+ggplot(mtcars, aes(mpg, wt)) + geom_point()
+ggsave("mtcars.pdf", plot=last_plot()) #ggsave("mtcars.png") for png format
+```
+
+
+Or, use `print` and combine with functions like `png` or `pdf`
+
+
+```{r, eval=FALSE}
+p = ggplot(mtcars, aes(mpg, wt)) + geom_point() #"save" ggplot in p, it won't be showed, just stored
+png("mtcars.png")  #use pdf("mtcars.pdf") for a pdf format  # it opens a file
+print(p)
+dev.off() #close the plotting device (saves the file) #it closes the file
+```
+
+
+Base R plots can be saved similarly
+
+
+```{r, eval=FALSE}
+png("mtcars.png")
+plot(mtcars[,c('mpg','wt')])
+dev.off()
+```
+
+
+
+## Building and saving in multiple steps
+
+
+
+```{r, eval=FALSE}
+p= ggplot(data = starwars, aes(x = height, y = mass, color=human_skincolor)) +
+  geom_point(aes(shape=human_skincolor)) 
+#you can call ggsave() here
+p + geom_smooth(aes(linetype= human_skincolor), method='lm', se=FALSE)
+#call ggsave() again to save in a different file
+```
+
+
+
+
+# ggplot extensions
+
+## ggplot extensions
+
+There are many user-contributed extensions to ggplot. To get a feeling for what's available, see the [gallery](https://exts.ggplot2.tidyverse.org/gallery)
+
+Let's illustrate two cool ones
+
+- ggstatsplot: simple plots combined with tests
+
+- gganimate: animations
+
+
+## Package `ggstatsplot`
+
+Plot correlations for hate crime data
+
+
+```{r}
+ggcorrmat(hc[,-1]) #remove the first column of the hc (hatecrime) dataset 
+```
+
+
+## Package `ggstatsplot`
+
+
+```{r}
+ggscatterstats(data=hc, x=votes_trump, y=hatecrimes_fbi,
+  xlab  = "Vote for Donald Trump",
+  ylab  = "Hate crimes (FBI)",
+  title = "Hate crimes vs. Trump votes"
+)
+```
+
+
+## Package `gganimate`
+
+
+**gapminder data:** country life expectancy over time popularized by Dr. Hans Rosling
+
+{{< video https://www.youtube.com/watch?v=jbkSRLYSojo&ab_channel=GapminderFoundation width="750" height="400">}}
+
+
+## Package `gganimate`
+
+To animate your ggplot you add transitions: how to organize successive frames
+
+- `transition_states()`: new plot according to a discrete variable
+
+- `transition_time()`: new plot according to continuous var (time)
+
+- `transition_reveal()`: add elements to plot incrementally
+
+
+Other layers (the full list of options is [here](https://gganimate.com/reference/index.html)
+)
+
+- `ease_aes()`: how to ease aesthetics over transitions (linear, gain momentum...)
+
+- `enter_*()`/`exit_*()`: how new data should appear and how old data should disappear (fade in/out etc)
+
+- `shadow_*()`: how to present data from other times
+
+- `view_*()`: how to change positional scales
+
+
+
+## Saving an animation
+
+**Important.** in Win/Mac you may need the `gifski` package
+
+`anim_save()` saves your last animated plot into a specified file and directory ("myfile.gif" and "mydirectory" below)
+
+
+```{r, eval=FALSE}
+ggplot(mydata, ...) #code to produce the animation
+anim_save("myfile.gif", animation=last_animation(), path="mydirectory")
+```
+
+
+By default the output is a .gif. You can choose other formats (e.g. an MPEG video) by calling `animate` before saving
+
+
+
+```{r, eval=FALSE}
+p= ggplot(mydata, ...)  #code to produce the animation
+animate(p, renderer = ffmpeg_renderer())
+anim_save("myfile.gif", animation=last_animation(), path="mydirectory")
+```
+
+
+
+
+## Life expentancy data
+
+Dataset `gapminder` in package `gapminder`
+
+
+```{r}
+gapminder
+```
+
+
+## Non-animated plot
+
+A non-animated plot (all years are shown simultaneously)
+
+
+```{r}
+ggplot(gapminder, aes(x=gdpPercap, y=lifeExp)) +
+  geom_point(aes(colour=continent, size=pop), alpha = 0.7, show.legend = TRUE) +
+  scale_size(range = c(2, 12)) +  #scale point sizes (make them larger)
+  scale_x_log10() +
+  labs(x='GDP per capita', y='Life expectancy')
+```
+
+
+## transition_time
+
+We add a transition_time according to year.
+
+- frame_title can be used to label each year
+
+- Output appears in "Viewer" (RStudio's bottom-right panel)
+
+
+
+```{r, eval=FALSE}
+ggplot(gapminder, aes(gdpPercap, lifeExp)) +
+  geom_point(aes(colour=continent, size=pop), alpha = 0.7, show.legend = TRUE) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  #we add gganimate layers below
+  transition_time(year) +
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy')
+```
+
+
+---
+
+![](figs/gapminder.gif)
+
+
+## transition_states
+
+`transition_time` treats time as continuous, e.g. adds intermediate frames between years. `transition_states` evolves in a more "discrete" manner
+
+**Example:** airquality data
+
+
+```{r, eval=FALSE}
+ggplot(airquality, aes(Day, Temp)) + 
+  geom_point(colour = 'steelblue') +
+  transition_states(Month) +
+  labs(title='Month: {closest_state}', y='Temperature (Fahrenheit)')
+```
+
+
+
+![](figs/airquality.gif)
+
+## transition_reveal
+
+You can reveal new points in an increasing fashion, as done below
+
+![](figs/airquality_byday.gif)
+
+
+## Further example. GDP over time
+
+Animated histogram: distribution of GDP/capita over time
+
+
+```{r, eval=FALSE}
+ggplot(gapminder, aes(x=gdpPercap)) +
+  geom_histogram(bins=20) +
+  transition_states(year) +
+  labs(title='Year: {closest_state}', x='GDP per capita')
+```
+
+
+![](figs/gdp_per_year.png)
+
+
+
+## A (non-animated) violin plot
+
+Sometimes a non-animated figure is more effective
+
+
+```{r}
+p= ggplot(gapminder, aes(x=factor(year), y=gdpPercap)) +
+  geom_point() +
+  geom_violin() +
+  labs(x="Year", y="GDP per capita")
+p
+```
+
+
+## Who are the outliers?
+
+:::panel-tabset
+
+### Find country
+
+
+```{r}
+#We'll discuss group_by and top_n later
+maxgdp= group_by(gapminder, year) |>
+  top_n(1, gdpPercap)
+maxgdp
+```
+
+
+### Add labels
+
+
+```{r}
+p + geom_text(aes(label=country), data=maxgdp)
+```
+
+
+:::
+
+
+## Exercise
+
+Load the Gini dataset at the course's GitHub site.
+
+
+```{r}
+library(gganimate)
+#library(gifski)  #you may need this in Windows and Mac
+gini= as_tibble(read.csv("~/github/statcomp/datasets/gini.csv"))
+gini
+```
+
+
+1. Do a (non-animated) line plot of Gini vs time, with a different line colour per country
+
+2. Add `transition_reveal(Year)` to add an animation over time
+
+
+
+
+
+

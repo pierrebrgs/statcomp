@@ -47,7 +47,7 @@ Before doing data analysis you need to put data in the right format, define vari
 
 All 336,776 flights departing from New York in 2013. We display a few rows (type `View(flights)` to open the full data in RStudio)
 
-The data are stored in a `tibble`, an extension of `data.frame` that prints nicer and shows some info:
+The data are stored in a `tibble`, an extension of `data.frame` that prints nicer and shows some info: #doesn't work if the data are stored in a matrix
 `int` means integer, `dbl` real numbers, `chr` character vectors,`lgl` logical, `fctr` factor, `date` dates, `dttm` date-time
 
 ```{r}
@@ -70,20 +70,20 @@ The 5 main functions
 
 - Compute numerical summaries: `summarise()`. If used with `group_by()`, it operates by groups
 
-Other functions: `rename`, `transmute`
+Other functions: `rename`, `transmute` #transmute creates a NEW dataset with the data you added
 
 
 ## Filter {auto-animate="true"}
 
 ```{r}
-jan1= filter(flights, month == 1, day == 1)
+jan1= filter(flights, month == 1, day == 1) #both conditions will be met, c'est un et et non un ou
 jan1
 ```
 
 ## Filter {auto-animate="true"}
 
 ```{r}
-jan1= filter(flights, month == 1 & day == 1)
+jan1= filter(flights, month == 1 & day == 1) #la même chose, pour montrer qu'on peut utiliser d'autres signes ig
 jan1
 ```
 
@@ -118,8 +118,8 @@ filter(flightsm, month == 1 & day == 1)
 But we can easily select rows/columns with R's base functionality
 
 ```{r}
-sel= (flights[,'month']==1) & (flightsm[,'day']==1)
-flightsel= flightsm[sel,]
+sel= (flights[,'month']==1) & (flightsm[,'day']==1) #sel will be full of TRUE, FALSE, ...
+flightsel= flightsm[sel,] #when sel is true select row (before coma), and no condition on the columns so select all of them
 flightsel[1:5,1:3]
 ```
 
@@ -134,7 +134,7 @@ Missing's (`NA`) are excluded
 ```{r}
 # Let x be Mary's age. We don't know how old she is.
 x= NA
-x == 20 #is Mary 20?
+x == 20 #is Mary 20? #ça teste si les 2 sont égaux
 
 # Let y be John's age. We don't know how old he is.
 y= NA
@@ -145,7 +145,7 @@ To select rows with missing values, use `is.na`
 
 ```{r}
 df= tibble(x = c(1, NA, 3))
-filter(df, is.na(x) | x > 1)
+filter(df, is.na(x) | x > 1) #la barre c'est un ou
 ```
 
 ## Arrange
@@ -153,7 +153,7 @@ filter(df, is.na(x) | x > 1)
 You can sort by several variables
 
 ```{r}
-arrange(flights, year, month, day)
+arrange(flights, year, month, day) #arrange by year, then by month, then by day in an increasing way
 ```
 
 To sort in a descending fashion use `desc`
@@ -176,7 +176,7 @@ select(flights, year, month, day, dep_delay)
 ### Drop
 
 ```{r}
-select(flights, -year, -month,-day)
+select(flights, -year, -month,-day) #exclude year, month and day from this dataset
 ```
 
 :::
@@ -202,7 +202,7 @@ select(flights, contains("delay"))
 Trick to put some columns at the start. Select them, then use `everything`
 
 ```{r}
-select(flights, time_hour, air_time, everything())
+select(flights, time_hour, air_time, everything()) #je crois que c'est everything else
 ```
 
 
@@ -211,21 +211,21 @@ select(flights, time_hour, air_time, everything())
 Change variable names
 
 ```{r}
-rename(flights, deptime = dep_time)
+rename(flights, deptime = dep_time) #new = old
 ```
 
 
 
 ## Mutate
 
-We select a subset of columns and create 2 new ones
+We select a subset of columns and create 2 new ones #mutate means adding column
 
 :::panel-tabset
 
 ### Without pipe
 
 ```{r}
-flights_sml= select(flights, year:day, contains("delay"), distance, air_time)
+flights_sml= select(flights, year:day, contains("delay"), distance, air_time) #years:day select every column between year and day
 
 mutate(flights_sml, gain=dep_delay - arr_delay, speed = distance / air_time * 60)
 ```
@@ -266,11 +266,11 @@ Let's do the exercise with and without dplyr
 
 ### No mutate
 ```{r}
-uaflight= (flights$carrier == 'UA')
+uaflight= (flights$carrier == 'UA') #vector of true or false
 finedep= finearr= double(nrow(flights))
-finedep[uaflight]= 75 * flights$dep_delay[uaflight]/60
+finedep[uaflight]= 75 * flights$dep_delay[uaflight]/60 
 finedep[!uaflight]= 100 * flights$dep_delay[!uaflight]/60
-finedep[finedep<0]= 0
+finedep[finedep<0]= 0 #no reward for arriving early
 
 aaflight= flights$carrier == 'AA'
 finearr[aaflight]= 150 * flights$arr_delay[aaflight]/60
@@ -316,7 +316,7 @@ Base R has `aggregate` to compute a single summary (e.g. the mean)
 - `dplyr` also runs faster
 
 ```{r}
-aggregate(dep_delay ~ year + month + day, data=flights, FUN=mean, na.rm=TRUE)
+aggregate(dep_delay ~ year + month + day, data=flights, FUN=mean, na.rm=TRUE) #removing missing values
 ```
 
 ## Summarizing by groups
@@ -338,7 +338,7 @@ Flight distance vs. delay, for each destination airport with >20 flights other t
 
 ```{r}
 by_dest= group_by(flights, dest)
-delay= summarise(by_dest, count = n(),
+delay= summarise(by_dest, count = n(), #n() will count how many flights go to that airport
   dist = mean(distance, na.rm = TRUE),
   delay = mean(arr_delay, na.rm = TRUE)
 )
@@ -383,7 +383,7 @@ Example: number of flights with early departure (<5:00am)
 ```{r}
 flights |>
   group_by(year, month, day) |>
-  summarise(n_early = sum(dep_time < 500, na.rm=TRUE))
+  summarise(n_early = sum(dep_time < 500, na.rm=TRUE)) 
 ```
 
 ## Ungrouping
@@ -551,12 +551,42 @@ Name your file firstname_lastname.html
 
 2. Do an animated scatterplot of continent life expectancy vs. GDP (`transition_time(year)`)
 
+```{r}
+library(gganimate)
+library(gifski)
+
+#question 1
+
+#by continent
+continents= group_by(gapminder, continent)
+summarise(continents, avgLE = mean(lifeExp, na.rm = TRUE), avgGDPpp = mean(gdpPercap, na.rm = TRUE))
+#by year
+years = group_by(gapminder, year)
+summarise(years, avgLE = mean(lifeExp, na.rm = TRUE), avgGDPpp = mean(gdpPercap, na.rm = TRUE))
+
+#question 2
+a = ggplot(continent_summary, aes(x = mean_gdpPercap, y = mean_lifeExp, color = continent)) + geom_point() + labs(title = 'Year: {frame_time}', x = 'average GDP per capita', y = 'average life expectancy') +  transition_time(year) 
+animate(a, renderer = gifski_renderer())
+```
+
+
 
 **Exercise 2.** Inequality of GDP/capita across countries over time
 
 1. For each year, compute the inter-quartile range or the GDP/capita across countries
 
 2. Do a scatterplot of IQR vs. year. Add lines to the plot
+
+```{r}
+#question 1
+summarise(years, inter_quartile_range = IQR(gdpPercap))
+
+#question 2
+b = summarise(years, inter_quartile_range = IQR(gdpPercap), gdpPercap)
+ggplot(b, aes(x=year, y=inter_quartile_range)) + geom_point() + geom_line() + labs(x="year", y="IQR of GDP per Capita")
+
+```
+
 
 
 # Data import and export

@@ -63,7 +63,7 @@ describe_contvar= function(x) {
   return(round(ans,1))
 }
 
-describe_discvar= function(x) {
+describe_discvar= function(x) { #to define a discrete var, it requires a single value/function
   require(tidyverse) #if package not loaded, load it
   n= table(x)
   p= round(100 * n / sum(n), 1)
@@ -71,7 +71,7 @@ describe_discvar= function(x) {
   return(ans)
 }
 
-describe_var= function(x, vartype) {
+describe_var= function(x, vartype) { #takes 2 arguments
   if (vartype == 'continuous') {
     ans= describe_contvar(x)
   } else if (vartype == 'discrete') {
@@ -98,7 +98,7 @@ fandango
 Rotten Tomatoes film's score (normalized to 0-5)
 
 ```{r}
-describe_var(fandango$rt_norm, vartype='continuous')
+describe_var(fandango$rt_norm, vartype='continuous') #fandango$rt_norm means the var rt_norm in fandango
 ```
 
 Number of stars in Fandango movie page
@@ -136,7 +136,7 @@ Allows passing parameters that are not explicitly defined
 ### Example 1
 
 ```{r, error=TRUE}
-fun= function(x, y=0, ...) {
+fun= function(x, y=0, ...) { #... means there might be more variable 
   return(sum(x, ...) + sum(y, ...))
 }
 
